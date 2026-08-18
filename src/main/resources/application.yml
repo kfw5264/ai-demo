@@ -1,0 +1,75 @@
+server:
+  port: 9000
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:3306/ai_demo?useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&allowMultiQueries=true&allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Shanghai
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:root}
+    hikari:
+      maximum-pool-size: 18        # 最大连接数（参考：CPU核心数 * 2 + 磁盘数）
+      minimum-idle: 18             # 最小空闲连接数，官方建议等于maximum-pool-size
+      connection-timeout: 30000    # 连接超时时间，单位毫秒，生产建议3-5s
+      # idle-timeout: 60000        # 空闲连接池回收时间，仅当minimum-idle小于maximum-pool-size时有效
+      connection-test-query: SELECT 1
+      validation-timeout: 3000
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: 6379
+      password: ${REDIS_PASSWORD:}
+      database: 0
+      timeout: 5000
+      connect-timeout: 3000
+      lettuce:
+        pool:
+          max-active: 16                        # 最大连接数
+          max-idle: 8                           # 最大空闲连接数
+          min-idle: 2                           # 最小空闲连接数
+          max-wait: 3000ms                      # 最大等待时间
+          time-between-eviction-runs: 30s       # 连接回收时间间隔
+        shutdown-timeout: 200ms
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: 5672
+    username: ${RABBITMQ_USER:root}
+    password: ${RABBITMQ_PASSWORD:root}
+    virtual-host: /
+    publisher-confirm-type: correlated          # 异步确认模式
+    publisher-returns: true                     # 开启消息退回
+    template:
+      mandatory: true                           # 消息无法到达目的地时返回给生产者
+    # 消费者配置
+    listener:
+      simple:
+        acknowledge-mode: manual                # 手动确认模式
+        prefetch: 10                            # 预取值，每次预取10条，避免消费者过载
+        retry:
+          enabled: true                         # 启用重试
+          max-retries: 3                        # 最大重试次数
+          initial-interval: 1000ms              # 初始重试间隔
+          multiplier: 2                         # 重试间隔倍数
+          max-interval: 10000ms                 # 最大重试间隔
+        concurrency: 3                          # 并发数，同时处理多个任务
+        max-concurrency: 5                      # 最大并发数
+
+  mail:
+    host: ${MAIL_HOST:smtp.qq.com}
+    port: ${MAIL_PORT:465}
+    protocol: ${MAIL_PROTOCOL:smtp}
+    username: ${MAIL_USERNAME:test@qq.com}
+    password: ${MAIL_PASSWORD:test}
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+            trust: ${MAIL_HOST}
+          starttls:
+            enable: false
+            required: false
+
